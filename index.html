@@ -1,0 +1,189 @@
+<html>
+
+<head>
+    <title>FORM DETAILS</title>
+    <link rel="stylesheet" href="index.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:ital@1&family=Redressed&display=swap" rel="stylesheet">
+    <script src='index.js'></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+</head>
+
+<body>
+    <center>
+        <button>
+            <a href="login.html">Click here to update details </a>
+        </button>
+        <p>
+        <h4>ENTER DETAILS</h4>
+        </p>
+        <p id="GFG_UP" style="font-size: 15px; font-weight: bold;">
+        </p>
+        <form id="formId">
+            <label>First Name :</label>
+            <input type="text" id="fName" placeholder="Enter the first name" required><br>
+            <label>Last Name :</label>
+            <input type="text" id="lName" placeholder="Enter the last name" required> <br>
+            <label>User Name :</label>
+            <input type="text" id="uName" placeholder="Enter the user name" required><br>
+            <label>Contact No. :</label>
+            <input type="number" id="phn" placeholder="Enter the phone number" required><br>
+            <label>Date of Birth :</label>
+            <input type="date" id="dob" placeholder="Enter the date of birth" required><br>
+            <label>E-mail :</label>
+            <input type="email" id="email" placeholder="Enter the email id" onblur=" validateEmail()" required><br>
+            <label>Password :</label>
+            <input type="password" id="pass" onblur=verifyPassword() placeholder="Enter the password" required><br>
+            <label>Confirm Password :</label>
+            <input type="password" id="cPass" placeholder="Enter the password again" required><br>
+            <span id="message" style="color:red"> </span>
+            <button type="submit">submit</button>
+        </form>
+        <div id="result"></div>
+
+        <table id="myTable">
+            <th>first_name</th>
+            <th>last_name</th>
+            <th>user_name</th>
+            <th>contact_no</th>
+            <th>dob</th>
+            <th>email</th>
+        </table>
+
+    </center>
+
+    <b>
+        <div id="myData"></div>
+    </b>
+</body>
+<script>
+
+    var form = document.querySelector("#formId")
+    formId.onsubmit = async (e) => {
+        e.preventDefault();
+        data = {
+            first_name: form.querySelector('input[id="fName"]').value,
+            last_name: form.querySelector('input[id="lName"]').value,
+            user_name: form.querySelector('input[id="uName"]').value,
+            contact_no: form.querySelector('input[id="phn"]').value,
+            dob: form.querySelector('input[id="dob"]').value,
+            email: form.querySelector('input[id="email"]').value,
+            password: form.querySelector('input[id="pass"]').value,
+            c_pass: form.querySelector('input[id="cPass"]').value
+        }
+
+        data_table()
+
+        if (checkPassword(data) == true && verifyContact_No() == true && getAge(data.dob) == true) {
+            let response = await fetch('http://127.0.0.1:3000/add', {
+                method: 'POST', // or 'PUT'
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            })
+            let text = await response.text(); // read response body as text
+            document.querySelector("#result").innerHTML = text
+            document.getElementById("formId").reset()
+
+        }
+    };
+
+    function data_table() {
+        fetch('http://127.0.0.1:3000/get')
+            .then(function (response) {
+                return response.json()
+            })
+            .then(function (data) {
+                for (var i = 0; i < data.length; i++) {
+                    var row = $('<tr><td>'
+                        + data[i].first_name + '</td><td>'
+                        + data[i].last_name + '</td><td>'
+                        + data[i].user_name + '</td><td>'
+                        + data[i].contact_no + '</td><td>'
+                        + (new Date(data[i].dob)).toLocaleDateString("en-US") + '</td><td>'
+                        + data[i].email + '<td></tr>')
+                    $('#myTable').append(row)
+                }
+            })
+            .catch(function (err) {
+                console.log('error: ' + err)
+            })
+    }
+
+    function getAge(date) {
+        var dob = new Date(date)
+        var month_diff = Date.now() - dob.getTime()
+        var age_dt = new Date(month_diff)
+        var year = age_dt.getUTCFullYear()
+        var age = Math.abs(year - 1970)
+
+        if (age >= 18) {
+            return true
+        } else {
+            alert('YOU ARE UNDER 18')
+        }
+    }
+    function verifyContact_No() {
+        if (data.contact_no.length === 10) {
+            return true
+        } else {
+            alert('ENTER CONTACT NO. OF 10 DIGITS')
+        }
+    }
+
+    function verifyPassword() {
+        var pw = document.getElementById("pass").value;
+        //check empty password field  
+        if (pw == "") {
+            document.getElementById("message").innerHTML = "**Fill the password please!"
+            return false
+        }
+        //minimum password length validation  
+        if (pw.length < 8) {
+            document.getElementById("message").innerHTML = "**Password length must be atleast 8 characters"
+            return false
+        }
+        //maximum length of password validation  
+        if (pw.length > 15) {
+            document.getElementById("message").innerHTML = "**Password length must not exceed 15 characters"
+            return false
+        }
+    }
+    function validateEmail() {
+        email = document.getElementById("email").value
+        if (/^\w+([\.-]?\w+)@\w+([\.-]?\w+)(\.\w{2,3})+$/.test(email)) {
+            return true
+        } else {
+            alert("You have entered an invalid email address!")
+            return (false)
+        }
+    }
+    // to check whether if equal to confirm password
+    function checkPassword(data) {
+        password1 = data.password
+        password2 = data.c_pass
+        // If password not entered
+        if (password1 == '') {
+            alert("Please enter Password")
+        }
+        // If confirm password not entered
+        else if (password2 == '') {
+            alert("Please enter confirm password")
+        }
+        // If Not same return False.    
+        else if (password1 != password2) {
+            alert("\nPassword did not match: Please try again...")
+            return false;
+        }
+        // If same return True.
+        else {
+            return true
+        }
+    }
+
+    data_table()
+</script>
+
+</html>

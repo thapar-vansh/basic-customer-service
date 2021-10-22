@@ -1,0 +1,170 @@
+<html>
+  <head>
+    <script src="index.js"></script>
+    <link rel="stylesheet" href="home.css" />
+    <script
+      src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"
+      type="text/javascript"
+    ></script>
+    <title>UPDATE</title>
+    <button>
+      <a href="login.html">LOG OUT </a>
+    </button>
+  </head>
+
+  <body>
+    <center>
+      <form id="u_Form">
+        <label> Enter your username : </label>
+        <input
+          type="text"
+          id="updated_Username1"
+          placeholder="Enter your Username "
+          required
+        />
+        <label>Enter first name to be updated:</label>
+        <input
+          type="text"
+          id="updated_FirstName"
+          placeholder="Enter the First name"
+          required
+        /><br />
+        <label>Enter last name to be updated:</label>
+        <input
+          type="text"
+          id="updated_LastName"
+          placeholder="Enter the Last name"
+          required
+        /><br />
+        <label>Enter dob to be updated:</label>
+        <input
+          type="date"
+          id="updated_Dob"
+          placeholder="Enter the Date"
+          required
+        /><br />
+        <label>Enter last contact number to be updated:</label>
+        <input
+          type="number"
+          id="updated_Phn"
+          placeholder="Enter the Phone no."
+          required
+        /><br />
+        <label>Enter last email to be updated:</label>
+        <input
+          type="email"
+          id="updated_Email"
+          placeholder="Enter the Email"
+          required
+        /><br />
+
+        <button type="submit">submit</button>
+      </form>
+      <div id="updated_result"></div>
+
+      <script>
+        const u_Input = localStorage.getItem('NAME')
+
+        let resData = {
+           user_name: u_Input
+        }
+
+        fetch('http://127.0.0.1:3000/getByUsername', {
+            method: 'POST', // or 'PUT'
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(resData),
+        })
+            .then(function (response) {
+                return response.json()
+            })
+            .then(function (data) {
+                document.getElementById('updated_FirstName').value = data[0].first_name
+                document.getElementById('updated_LastName').value = data[0].last_name
+                document.getElementById('updated_Dob').valueAsDate = new Date(data[0].dob)
+                document.getElementById('updated_Phn').value = data[0].contact_no
+                document.getElementById('updated_Email').value = data[0].email
+                document.getElementById('updated_Username1').value = data[0].user_name
+                
+            })
+            .catch(function (err) {
+                console.log('error: ' + err)
+            })
+
+        var form = document.querySelector("#u_Form")
+        u_Form.onsubmit = async (e) => {
+            e.preventDefault();
+            resData = {
+                user_name: form.querySelector('input[id="updated_Username1"]').value,
+                first_name: form.querySelector('input[id="updated_FirstName"]').value,
+                last_name: form.querySelector('input[id="updated_LastName"]').value,
+                contact_no: form.querySelector('input[id="updated_Phn"]').value,
+                dob: form.querySelector('input[id="updated_Dob"]').value,
+                email: form.querySelector('input[id="updated_Email"]').value
+
+            }
+            if (getAge(resData.dob) == true && verifyContact_No() == true) {
+
+                let response = await fetch('http://127.0.0.1:3000/update', {
+                    method: 'POST', // or 'PUT'
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(resData),
+
+                })
+                let data = await response.text()
+                document.querySelector("#updated_result").innerHTML = data
+                send_mail(document.getElementById('updated_Email').value)
+                document.getElementById("u_Form").reset()
+            }
+
+        }
+        function getAge(date) {
+            var dob = new Date(date)
+            var month_diff = Date.now() - dob.getTime()
+            var age_dt = new Date(month_diff)
+            var year = age_dt.getUTCFullYear()
+            var age = Math.abs(year - 1970)
+
+            if (age >= 18) {
+                return true
+            } else {
+                alert('YOU ARE UNDER 18')
+            }
+        }
+        function verifyContact_No() {
+            if (resData.contact_no.length === 10) {
+                return true
+            } else {
+                alert('ENTER CONTACT NO. OF 10 DIGITS')
+            }
+        }
+        function validateEmail() {
+            email = document.getElementById("email").value
+            if (/^\w+([\.-]?\w+)@\w+([\.-]?\w+)(\.\w{2,3})+$/.test(email)) {
+                return true
+            } else {
+                alert("You have entered an invalid email address!")
+                return (false)
+            }
+        }
+
+        async function send_mail(email) {
+            let resData = {
+                to: email
+            }
+            let response = await fetch('http://127.0.0.1:3000/sendEmail', {
+                method: 'POST', // or 'PUT'
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(resData)
+            })
+            let data = JSON.parse(await response.text());
+        }
+      </script>
+    </center>
+  </body>
+</html>
