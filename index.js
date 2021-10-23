@@ -16,27 +16,6 @@ let transport = nodemailer.createTransport({
   },
 })
 
-//send mail
-app.get('/sendMail', function (req, res) {
-  console.log('sending email..')
-
-  const mailOptions = {
-    from: 'example29@email.com', // Sender address
-    to: req.query.to, // recipients
-    subject: 'test mail from Nodejs', // Subject line
-    text: 'Successfully! received mail using nodejs', // Plain text body
-  }
-  console.log(mailOptions)
-  transport.sendMail(mailOptions, function (err, info) {
-    if (err) {
-      console.log(err)
-    } else {
-      console.log('mail has been sent')
-      console.log(info)
-    }
-  })
-})
-
 app.use(bodyParser.json())
 
 app.use(function (req, res, next) {
